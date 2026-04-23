@@ -143,9 +143,9 @@
     <div id="view-dashboard" class="app-container">
         <header class="p-8 pb-4 flex justify-between items-center relative">
             <h1 class="text-[clamp(3.5rem,15vw,5rem)] font-extrabold tracking-tighter leading-none">Склад</h1>
-            <div onclick="toggleSearch()"
+            <div id="search-trigger" onclick="handleSearchClick()"
                 class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0">
-                <i data-lucide="search" class="w-5 h-5 text-slate-500"></i>
+                <i id="main-search-icon" data-lucide="search" class="w-5 h-5 text-slate-500"></i>
             </div>
         </header>
 
@@ -157,8 +157,7 @@
         <div class="px-8 mb-8 flex items-center">
             <div class="flex items-center gap-2">
                 <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
-                <span class="text-sm font-bold text-slate-900 tracking-tight" id="report-date-display">Отчет от
-                    21.04.2026</span>
+                <span class="text-sm font-bold text-slate-900 tracking-tight" id="report-date-display">Отчет от загрузки...</span>
             </div>
         </div>
 
@@ -308,12 +307,32 @@
         }
         // --- END API LOGIC ---
 
+        function handleSearchClick() {
+            toggleSearch();
+        }
+
         function toggleSearch() {
             const bar = document.getElementById('search-bar');
+            const icon = document.getElementById('main-search-icon');
+            
             bar.classList.toggle('hidden');
+            
             if (!bar.classList.contains('hidden')) {
+                // Bar is OPEN
+                icon.setAttribute('data-lucide', 'x');
                 document.getElementById('search-input').focus();
+            } else {
+                // Bar is CLOSED
+                icon.setAttribute('data-lucide', 'search');
+                clearSearch();
             }
+            lucide.createIcons();
+        }
+
+        function clearSearch() {
+            const input = document.getElementById('search-input');
+            input.value = '';
+            filterAndRender();
         }
 
         function selectTab(tabId) {
