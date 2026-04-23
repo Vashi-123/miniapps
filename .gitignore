@@ -1,6 +1,29 @@
-.venv/
+# Python
 __pycache__/
-.DS_Store
+*.py[cod]
+*$py.class
 .ipynb_checkpoints/
-*.csv
-*.xlsx
+
+# Virtual Environments
+venv/
+.venv/
+env/
+
+# Project specific
+backend/__pycache__/
+*.log
+analytics.log
+server.log
+pipeline.log
+
+# Local data (optional, but recommended if it's large/private)
+files/
+processed/
+stocks/
+transactions/
+
+# OS
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/

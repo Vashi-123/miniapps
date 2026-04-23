@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+<html lang="ru">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Procurement App</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Outfit Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #ffffff;
+            color: #1a1a1a;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .card-modern {
+            border-radius: 32px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* User Custom Colors - Pastel Palette */
+        .card-needs {
+            background-color: #FFE5E8;
+            color: #1a1a1a;
+        }
+
+        .card-pending {
+            background-color: #F6F1EC;
+            color: #1a1a1a;
+        }
+
+        .card-partial {
+            background-color: #E5F6FF;
+            color: #1a1a1a;
+        }
+
+        .card-full {
+            background-color: #F3FFEF;
+            color: #1a1a1a;
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.6);
+            padding: 4px 14px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #1a1a1a;
+            white-space: nowrap;
+        }
+
+        .tabs-simple {
+            display: flex;
+            gap: 16px;
+            padding: 0 20px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            font-size: 15px;
+            font-weight: 800;
+            color: #d1d5db;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+
+        .tab-btn.active {
+            color: #1a1a1a;
+        }
+
+        .tab-btn .count {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-left: 4px;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .btn-action {
+            padding: 1.1rem;
+            border-radius: 1.25rem;
+            font-weight: 800;
+            font-size: clamp(0.75rem, 3.5vw, 0.9rem);
+            transition: transform 0.1s;
+        }
+
+        .btn-action:active {
+            transform: scale(0.96);
+        }
+
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding-top: 20px;
+        }
+
+        /* Status Page Specifics */
+        .status-option {
+            padding: 16px;
+            border-radius: 24px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-weight: 700;
+            transition: all 0.2s;
+            text-align: left;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .status-option:active {
+            transform: scale(0.97);
+        }
+
+        /* View Transitions */
+        .view-hidden {
+            display: none;
+        }
+    </style>
+</head>
+
+<body class="pb-10 overflow-x-hidden">
+
+    <!-- VIEW 1: DASHBOARD -->
+    <div id="view-dashboard" class="app-container">
+        <header class="p-8 pb-4 flex justify-between items-center relative">
+            <h1 class="text-[clamp(3.5rem,15vw,5rem)] font-extrabold tracking-tighter leading-none">Склад</h1>
+            <div onclick="toggleSearch()"
+                class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0">
+                <i data-lucide="search" class="w-5 h-5 text-slate-500"></i>
+            </div>
+        </header>
+
+        <div id="search-bar" class="px-8 mb-6 hidden">
+            <input type="text" id="search-input" placeholder="Поиск по названию или ID..."
+                class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:outline-none focus:border-black transition-all">
+        </div>
+
+        <div class="px-8 mb-8 flex items-center">
+            <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                <span class="text-sm font-bold text-slate-900 tracking-tight" id="report-date-display">Отчет от
+                    21.04.2026</span>
+            </div>
+        </div>
+
+        <div class="tabs-simple no-scrollbar">
+            <button onclick="selectTab('needs')" id="tab-needs" class="tab-btn active">Закупить <span class="count"
+                    id="count-needs">0</span></button>
+            <button onclick="selectTab('pending')" id="tab-pending" class="tab-btn">В ожидании <span class="count"
+                    id="count-pending">0</span></button>
+            <button onclick="selectTab('partial')" id="tab-partial" class="tab-btn">Частично <span class="count"
+                    id="count-partial">0</span></button>
+            <button onclick="selectTab('full')" id="tab-full" class="tab-btn">Готово <span class="count"
+                    id="count-full">0</span></button>
+        </div>
+
+        <div id="inventory-list" class="px-6">
+            <!-- JS -->
+        </div>
+    </div>
+
+    <!-- VIEW 2: STATUS MANAGEMENT PAGE -->
+    <div id="view-status" class="app-container fixed inset-0 bg-white z-[500] hidden flex-col">
+        <header class="p-8 pb-4 flex items-center gap-6">
+            <button onclick="closeStatusPage()"
+                class="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center active:scale-90 transition-transform">
+                <i data-lucide="chevron-left" class="w-7 h-7"></i>
+            </button>
+            <h1 class="text-xl font-extrabold tracking-tight">Изменить статус</h1>
+        </header>
+
+        <div class="px-8 pt-6 flex-grow overflow-y-auto no-scrollbar pb-10">
+            <div class="mb-12">
+                <h2 class="text-4xl font-extrabold tracking-tighter leading-tight" id="status-page-title">Название
+                    товара</h2>
+                <p class="text-sm font-bold text-slate-400 mt-3" id="status-page-subtitle">ID: 0000 // КАТЕГОРИЯ</p>
+            </div>
+
+            <div class="space-y-4">
+                <button onclick="updateStage('needs')" class="status-option w-full bg-[#FFE5E8]">
+                    <div class="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center shrink-0">
+                        <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-base font-extrabold tracking-tight">Требуется закупка</p>
+                        <p class="text-[10px] opacity-40 font-bold uppercase">Срочный выкуп товара</p>
+                    </div>
+                </button>
+
+                <button onclick="updateStage('pending')" class="status-option w-full bg-[#F6F1EC]">
+                    <div class="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center shrink-0">
+                        <i data-lucide="clock" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-base font-extrabold tracking-tight">В ожидании поставки</p>
+                        <p class="text-[11px] opacity-40 font-bold uppercase">Товар в пути или оплачен</p>
+                    </div>
+                </button>
+
+                <button onclick="updateStage('partial')" class="status-option w-full bg-[#E5F6FF]">
+                    <div class="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center shrink-0">
+                        <i data-lucide="package-plus" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-base font-extrabold tracking-tight">Получили частично</p>
+                        <p class="text-[11px] opacity-40 font-bold uppercase">Поступила часть партии</p>
+                    </div>
+                </button>
+
+                <button onclick="updateStage('full')" class="status-option w-full bg-[#F3FFEF]">
+                    <div class="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center shrink-0">
+                        <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-base font-extrabold tracking-tight">Закупка завершена</p>
+                        <p class="text-[11px] opacity-40 font-bold uppercase">Товар на складе полностью</p>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let items = []; // Populated via API
+        let currentTab = 'needs';
+        let selectedItemId = null;
+
+        // --- API INTEGRATION ---
+        const API_BASE = "http://192.168.55.112:8081"; 
+
+        async function fetchState() {
+            try {
+                const response = await fetch(`${API_BASE}/api/inventory`, {
+                    headers: { 'Cache-Control': 'no-cache' }
+                });
+                items = await response.json();
+                
+                // --- Update dynamic date ---
+                if (items.length > 0 && items[0].updated_at) {
+                    const lastUpdate = new Date(items[0].updated_at);
+                    const formattedDate = lastUpdate.toLocaleDateString('ru-RU', {
+                        day: '2-digit',
+                        month: '2-digit',
+                        year: 'numeric'
+                    });
+                    const dateDisplay = document.getElementById('report-date-display');
+                    if (dateDisplay) dateDisplay.innerText = `Отчет от ${formattedDate}`;
+                }
+                
+                filterAndRender();
+                updateTabCounts();
+            } catch (e) {
+                console.error("API error:", e);
+            }
+        }
+
+        async function updateStage(newStage) {
+            const initData = window.Telegram?.WebApp?.initData || "";
+
+            try {
+                const response = await fetch(`${API_BASE}/api/update_status`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'X-Telegram-Init-Data': initData
+                    },
+                    body: JSON.stringify({
+                        sku_id: selectedItemId,
+                        new_stage: newStage
+                    })
+                });
+
+                if (response.ok) {
+                    closeStatusPage();
+                    fetchState(); // Refresh list after update
+                } else if (response.status === 403) {
+                    const data = await response.json();
+                    window.Telegram?.WebApp?.showPopup({
+                        title: 'Доступ ограничен',
+                        message: data.detail || 'У вас нет прав для изменения статуса.',
+                        buttons: [{ type: 'close' }]
+                    });
+                } else {
+                    alert("Ошибка при обновлении статуса");
+                }
+            } catch (e) {
+                alert("Сервер недоступен. Проверьте соединение.");
+            }
+        }
+        // --- END API LOGIC ---
+
+        function toggleSearch() {
+            const bar = document.getElementById('search-bar');
+            bar.classList.toggle('hidden');
+            if (!bar.classList.contains('hidden')) {
+                document.getElementById('search-input').focus();
+            }
+        }
+
+        function selectTab(tabId) {
+            currentTab = tabId;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            const tab = document.getElementById(`tab-${tabId}`);
+            if (tab) tab.classList.add('active');
+            filterAndRender();
+        }
+
+        function filterAndRender() {
+            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+            const filtered = items.filter(i => {
+                const matchesTab = i.stage === currentTab;
+                const matchesSearch = i.name.toLowerCase().includes(searchQuery) ||
+                    i.sku_id.toString().includes(searchQuery);
+                return matchesTab && matchesSearch;
+            });
+            renderList(filtered);
+        }
+
+        function renderList(data) {
+            const list = document.getElementById('inventory-list');
+            list.innerHTML = '';
+
+            data.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `card-modern card-${item.stage}`;
+
+                card.innerHTML = `
+                    <div class="flex gap-2 mb-6">
+                        <span class="tag text-black">${item.group}</span>
+                        <span class="tag text-black">ID:${item.sku_id}</span>
+                    </div>
+
+                    <div class="flex items-center gap-4 mb-8">
+                        <div>
+                            <h3 class="text-2xl font-extrabold tracking-tight leading-none mb-1">${item.name}</h3>
+                            <p class="text-sm font-bold opacity-40 uppercase tracking-tight">Портфель ${item.group}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-y-5 mb-10">
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="package" class="w-4 h-4 opacity-40"></i>
+                            <span class="text-sm font-bold">Остаток: ${item.qty} шт</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="clock" class="w-4 h-4 opacity-40"></i>
+                            <span class="text-sm font-bold">Хватит на: ${item.days_left.toFixed(1)} дн</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="tag" class="w-4 h-4 opacity-40"></i>
+                            <span class="text-sm font-bold">Тип: Digital</span>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <i data-lucide="trending-up" class="w-4 h-4 opacity-40"></i>
+                            <span class="text-sm font-bold">Нужно: +${item.need}</span>
+                        </div>
+                    </div>
+
+                    <button onclick="openStatusPage('${item.sku_id}')" class="w-full bg-black text-white btn-action shadow-sm">Изменить статус</button>
+                `;
+                list.appendChild(card);
+            });
+            lucide.createIcons();
+            updateTabCounts();
+        }
+
+        function openStatusPage(id) {
+            selectedItemId = id;
+            const item = items.find(i => i.sku_id == id);
+
+            document.getElementById('status-page-title').innerText = item.name;
+            document.getElementById('status-page-subtitle').innerText = `ID: ${item.sku_id} // ${item.group}`;
+
+            document.getElementById('view-dashboard').classList.add('view-hidden');
+            document.getElementById('view-status').classList.remove('hidden');
+        }
+
+        function closeStatusPage() {
+            document.getElementById('view-dashboard').classList.remove('view-hidden');
+            document.getElementById('view-status').classList.add('hidden');
+            selectedItemId = null;
+        }
+
+        function updateTabCounts() {
+            const countNeeds = document.getElementById('count-needs');
+            const countPending = document.getElementById('count-pending');
+            const countPartial = document.getElementById('count-partial');
+            const countFull = document.getElementById('count-full');
+
+            if (countNeeds) countNeeds.innerText = items.filter(i => i.stage === 'needs').length;
+            if (countPending) countPending.innerText = items.filter(i => i.stage === 'pending').length;
+            if (countPartial) countPartial.innerText = items.filter(i => i.stage === 'partial').length;
+            if (countFull) countFull.innerText = items.filter(i => i.stage === 'full').length;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            fetchState();
+            document.getElementById('search-input').oninput = filterAndRender;
+
+            if (window.Telegram && window.Telegram.WebApp) {
+                const tg = window.Telegram.WebApp;
+                tg.ready();
+                tg.expand();
+                tg.setHeaderColor('#ffffff');
+                tg.setBackgroundColor('#ffffff');
+            }
+            lucide.createIcons();
+        });
+    </script>
+</body>
+
+</html>
