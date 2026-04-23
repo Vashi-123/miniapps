@@ -157,7 +157,8 @@
         <div class="px-8 mb-8 flex items-center">
             <div class="flex items-center gap-2">
                 <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
-                <span class="text-sm font-bold text-slate-900 tracking-tight" id="report-date-display">Отчет от загрузки...</span>
+                <span class="text-sm font-bold text-slate-900 tracking-tight" id="report-date-display">Отчет от
+                    загрузки...</span>
             </div>
         </div>
 
@@ -238,74 +239,65 @@
         </div>
     </div>
 
+    <!-- Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <script>
-        let items = []; // Populated via API
+        // --- CONFIGURATION (Injected via GitHub Actions) ---
+        const SUPABASE_URL = "{{SUPABASE_URL}}";
+        const SUPABASE_KEY = "{{SUPABASE_KEY}}";
+        
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let items = [];
         let currentTab = 'needs';
         let selectedItemId = null;
 
-        // --- API INTEGRATION ---
-        const API_BASE = "http://192.168.55.112:8081"; 
-
         async function fetchState() {
             try {
-                const response = await fetch(`${API_BASE}/api/inventory`, {
-                    headers: { 'Cache-Control': 'no-cache' }
-                });
-                items = await response.json();
-                
+                const { data, error } = await _supabase
+                    .from('inventory')
+                    .select('*')
+                    .order('updated_at', { ascending: false });
+
+                if (error) throw error;
+                items = data;
+
                 // --- Update dynamic date ---
                 if (items.length > 0 && items[0].updated_at) {
                     const lastUpdate = new Date(items[0].updated_at);
                     const formattedDate = lastUpdate.toLocaleDateString('ru-RU', {
-                        day: '2-digit',
-                        month: '2-digit',
-                        year: 'numeric'
+                        day: '2-digit', month: '2-digit', year: 'numeric'
                     });
                     const dateDisplay = document.getElementById('report-date-display');
                     if (dateDisplay) dateDisplay.innerText = `Отчет от ${formattedDate}`;
                 }
-                
+
                 filterAndRender();
                 updateTabCounts();
             } catch (e) {
-                console.error("API error:", e);
+                console.error("Supabase error:", e);
+                const list = document.getElementById('inventory-list');
+                list.innerHTML = `<div class="p-8 text-center opacity-50">Ошибка загрузки: ${e.message}</div>`;
             }
         }
 
         async function updateStage(newStage) {
-            const initData = window.Telegram?.WebApp?.initData || "";
-
             try {
-                const response = await fetch(`${API_BASE}/api/update_status`, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                        'X-Telegram-Init-Data': initData
-                    },
-                    body: JSON.stringify({
-                        sku_id: selectedItemId,
-                        new_stage: newStage
-                    })
-                });
+                const { error } = await _supabase
+                    .from('inventory')
+                    .update({ stage: newStage })
+                    .eq('id', selectedItemId);
 
-                if (response.ok) {
-                    closeStatusPage();
-                    fetchState(); // Refresh list after update
-                } else if (response.status === 403) {
-                    const data = await response.json();
-                    window.Telegram?.WebApp?.showPopup({
-                        title: 'Доступ ограничен',
-                        message: data.detail || 'У вас нет прав для изменения статуса.',
-                        buttons: [{ type: 'close' }]
-                    });
-                } else {
-                    alert("Ошибка при обновлении статуса");
-                }
+                if (error) throw error;
+
+                closeStatusPage();
+                await fetchState();
             } catch (e) {
-                alert("Сервер недоступен. Проверьте соединение.");
+                console.error("Update error:", e);
+                alert("Ошибка при обновлении статуса");
             }
         }
-        // --- END API LOGIC ---
 
         function handleSearchClick() {
             toggleSearch();
@@ -314,25 +306,16 @@
         function toggleSearch() {
             const bar = document.getElementById('search-bar');
             const icon = document.getElementById('main-search-icon');
-            
             bar.classList.toggle('hidden');
-            
             if (!bar.classList.contains('hidden')) {
-                // Bar is OPEN
                 icon.setAttribute('data-lucide', 'x');
                 document.getElementById('search-input').focus();
             } else {
-                // Bar is CLOSED
                 icon.setAttribute('data-lucide', 'search');
-                clearSearch();
+                document.getElementById('search-input').value = '';
+                filterAndRender();
             }
             lucide.createIcons();
-        }
-
-        function clearSearch() {
-            const input = document.getElementById('search-input');
-            input.value = '';
-            filterAndRender();
         }
 
         function selectTab(tabId) {
@@ -344,11 +327,10 @@
         }
 
         function filterAndRender() {
-            const searchQuery = document.getElementById('search-input').value.toLowerCase();
+            const query = document.getElementById('search-input').value.toLowerCase();
             const filtered = items.filter(i => {
                 const matchesTab = i.stage === currentTab;
-                const matchesSearch = i.name.toLowerCase().includes(searchQuery) ||
-                    i.sku_id.toString().includes(searchQuery);
+                const matchesSearch = i.name.toLowerCase().includes(query) || i.id.toString().includes(query);
                 return matchesTab && matchesSearch;
             });
             renderList(filtered);
@@ -358,20 +340,25 @@
             const list = document.getElementById('inventory-list');
             list.innerHTML = '';
 
+            if (data.length === 0) {
+                list.innerHTML = `<div class="p-20 text-center opacity-20">Пусто</div>`;
+                return;
+            }
+
             data.forEach(item => {
                 const card = document.createElement('div');
                 card.className = `card-modern card-${item.stage}`;
 
                 card.innerHTML = `
                     <div class="flex gap-2 mb-6">
-                        <span class="tag text-black">${item.group}</span>
-                        <span class="tag text-black">ID:${item.sku_id}</span>
+                        <span class="tag text-black">${item.group || 'Общая'}</span>
+                        <span class="tag text-black">ID:${item.id}</span>
                     </div>
 
                     <div class="flex items-center gap-4 mb-8">
                         <div>
                             <h3 class="text-2xl font-extrabold tracking-tight leading-none mb-1">${item.name}</h3>
-                            <p class="text-sm font-bold opacity-40 uppercase tracking-tight">Портфель ${item.group}</p>
+                            <p class="text-sm font-bold opacity-40 uppercase tracking-tight">Портфель ${item.group || 'Общая'}</p>
                         </div>
                     </div>
 
@@ -381,12 +368,12 @@
                             <span class="text-sm font-bold">Остаток: ${item.qty} шт</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <i data-lucide="clock" class="w-4 h-4 opacity-40"></i>
-                            <span class="text-sm font-bold">Хватит на: ${item.days_left.toFixed(1)} дн</span>
+                            <i data-lucide="trending-down" class="w-4 h-4 opacity-40"></i>
+                            <span class="text-sm font-bold">Расход: ${item.daily_spend?.toFixed(1) || 0} д/д</span>
                         </div>
                         <div class="flex items-center gap-2">
-                            <i data-lucide="tag" class="w-4 h-4 opacity-40"></i>
-                            <span class="text-sm font-bold">Тип: Digital</span>
+                            <i data-lucide="clock" class="w-4 h-4 opacity-40"></i>
+                            <span class="text-sm font-bold">Хватит на: ${item.days_left?.toFixed(1) || item.days?.toFixed(1) || 0} дн</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <i data-lucide="trending-up" class="w-4 h-4 opacity-40"></i>
@@ -394,7 +381,7 @@
                         </div>
                     </div>
 
-                    <button onclick="openStatusPage('${item.sku_id}')" class="w-full bg-black text-white btn-action shadow-sm">Изменить статус</button>
+                    <button onclick="openStatusPage('${item.id}')" class="w-full bg-black text-white btn-action shadow-sm">Изменить статус</button>
                 `;
                 list.appendChild(card);
             });
@@ -404,11 +391,9 @@
 
         function openStatusPage(id) {
             selectedItemId = id;
-            const item = items.find(i => i.sku_id == id);
-
+            const item = items.find(i => i.id == id);
             document.getElementById('status-page-title').innerText = item.name;
-            document.getElementById('status-page-subtitle').innerText = `ID: ${item.sku_id} // ${item.group}`;
-
+            document.getElementById('status-page-subtitle').innerText = `ID: ${item.id} // ${item.group || 'Общая'}`;
             document.getElementById('view-dashboard').classList.add('view-hidden');
             document.getElementById('view-status').classList.remove('hidden');
         }
@@ -420,27 +405,21 @@
         }
 
         function updateTabCounts() {
-            const countNeeds = document.getElementById('count-needs');
-            const countPending = document.getElementById('count-pending');
-            const countPartial = document.getElementById('count-partial');
-            const countFull = document.getElementById('count-full');
-
-            if (countNeeds) countNeeds.innerText = items.filter(i => i.stage === 'needs').length;
-            if (countPending) countPending.innerText = items.filter(i => i.stage === 'pending').length;
-            if (countPartial) countPartial.innerText = items.filter(i => i.stage === 'partial').length;
-            if (countFull) countFull.innerText = items.filter(i => i.stage === 'full').length;
+            const counts = { needs: 0, pending: 0, partial: 0, full: 0 };
+            items.forEach(i => { if(counts[i.stage] !== undefined) counts[i.stage]++; });
+            
+            document.getElementById('count-needs').innerText = counts.needs;
+            document.getElementById('count-pending').innerText = counts.pending;
+            document.getElementById('count-partial').innerText = counts.partial;
+            document.getElementById('count-full').innerText = counts.full;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
             fetchState();
             document.getElementById('search-input').oninput = filterAndRender;
-
             if (window.Telegram && window.Telegram.WebApp) {
-                const tg = window.Telegram.WebApp;
-                tg.ready();
-                tg.expand();
-                tg.setHeaderColor('#ffffff');
-                tg.setBackgroundColor('#ffffff');
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
             }
             lucide.createIcons();
         });
