@@ -50,6 +50,12 @@
             color: #1a1a1a;
         }
 
+        .card-sufficient {
+            background-color: #E6FFFA;
+            color: #1a1a1a;
+            border: 1px solid rgba(0, 128, 128, 0.1);
+        }
+
         .tag {
             background: rgba(255, 255, 255, 0.6);
             padding: 4px 14px;
@@ -173,6 +179,8 @@
                     id="count-partial">0</span></button>
             <button onclick="selectTab('full')" id="tab-full" class="tab-btn">Готово <span class="count"
                     id="count-full">0</span></button>
+            <button onclick="selectTab('sufficient')" id="tab-sufficient" class="tab-btn">Достаточно <span class="count"
+                    id="count-sufficient">0</span></button>
         </div>
 
         <div id="inventory-list" class="px-6">
@@ -408,13 +416,14 @@
         }
 
         function updateTabCounts() {
-            const counts = { needs: 0, pending: 0, partial: 0, full: 0 };
+            const counts = { needs: 0, pending: 0, partial: 0, full: 0, sufficient: 0 };
             items.forEach(i => { if(counts[i.stage] !== undefined) counts[i.stage]++; });
             
             document.getElementById('count-needs').innerText = counts.needs;
             document.getElementById('count-pending').innerText = counts.pending;
             document.getElementById('count-partial').innerText = counts.partial;
             document.getElementById('count-full').innerText = counts.full;
+            document.getElementById('count-sufficient').innerText = counts.sufficient;
         }
 
         document.addEventListener('DOMContentLoaded', () => {
