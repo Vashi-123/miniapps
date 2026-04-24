@@ -289,7 +289,7 @@
                 const { error } = await _supabase
                     .from('inventory')
                     .update({ stage: newStage })
-                    .eq('id', selectedItemId);
+                    .eq('sku_id', selectedItemId);
 
                 if (error) throw error;
 
@@ -332,7 +332,7 @@
             const query = document.getElementById('search-input').value.toLowerCase();
             const filtered = items.filter(i => {
                 const matchesTab = i.stage === currentTab;
-                const matchesSearch = i.name.toLowerCase().includes(query) || i.id.toString().includes(query);
+                const matchesSearch = i.name.toLowerCase().includes(query) || i.sku_id?.toString().includes(query);
                 return matchesTab && matchesSearch;
             });
             renderList(filtered);
@@ -354,7 +354,7 @@
                 card.innerHTML = `
                     <div class="flex gap-2 mb-6">
                         <span class="tag text-black">${item.group || 'Общая'}</span>
-                        <span class="tag text-black">ID:${item.id}</span>
+                        <span class="tag text-black">ID:${item.sku_id}</span>
                     </div>
 
                     <div class="flex items-center gap-4 mb-8">
@@ -383,7 +383,7 @@
                         </div>
                     </div>
 
-                    <button onclick="openStatusPage('${item.id}')" class="w-full bg-black text-white btn-action shadow-sm">Изменить статус</button>
+                    <button onclick="openStatusPage('${item.sku_id}')" class="w-full bg-black text-white btn-action shadow-sm">Изменить статус</button>
                 `;
                 list.appendChild(card);
             });
@@ -393,9 +393,9 @@
 
         function openStatusPage(id) {
             selectedItemId = id;
-            const item = items.find(i => i.id == id);
+            const item = items.find(i => i.sku_id == id);
             document.getElementById('status-page-title').innerText = item.name;
-            document.getElementById('status-page-subtitle').innerText = `ID: ${item.id} // ${item.group || 'Общая'}`;
+            document.getElementById('status-page-subtitle').innerText = `ID: ${item.sku_id} // ${item.group || 'Общая'}`;
             document.getElementById('view-dashboard').classList.add('view-hidden');
             document.getElementById('view-status').classList.remove('hidden');
         }
