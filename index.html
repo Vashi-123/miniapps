@@ -245,9 +245,9 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // --- CONFIGURATION ---
-        const SUPABASE_URL = "https://mmsjmkvkytiehqdvsclt.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tc2pta3ZreXRpZWhxZHZzY2x0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njg0ODM3MSwiZXhwIjoyMDkyNDI0MzcxfQ.R93Uw0jHyirg3JRC3lcVOCDqg-NEDpEMAfcRrlXv-sI";
+        // --- CONFIGURATION (Injected via GitHub Actions) ---
+        const SUPABASE_URL = "{{SUPABASE_URL}}";
+        const SUPABASE_KEY = "{{SUPABASE_KEY}}";
         
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
