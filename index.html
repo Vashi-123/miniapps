@@ -171,7 +171,9 @@
         </div>
 
         <div class="tabs-simple no-scrollbar">
-            <button onclick="selectTab('needs')" id="tab-needs" class="tab-btn active">Закупить <span class="count"
+            <button onclick="selectTab('sufficient')" id="tab-sufficient" class="tab-btn active">Достаточно <span class="count"
+                    id="count-sufficient">0</span></button>
+            <button onclick="selectTab('needs')" id="tab-needs" class="tab-btn">Закупить <span class="count"
                     id="count-needs">0</span></button>
             <button onclick="selectTab('pending')" id="tab-pending" class="tab-btn">В ожидании <span class="count"
                     id="count-pending">0</span></button>
@@ -179,8 +181,6 @@
                     id="count-partial">0</span></button>
             <button onclick="selectTab('full')" id="tab-full" class="tab-btn">Готово <span class="count"
                     id="count-full">0</span></button>
-            <button onclick="selectTab('sufficient')" id="tab-sufficient" class="tab-btn">Достаточно <span class="count"
-                    id="count-sufficient">0</span></button>
         </div>
 
         <div id="inventory-list" class="px-6">
@@ -260,7 +260,7 @@
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         let items = [];
-        let currentTab = 'needs';
+        let currentTab = 'sufficient';
         let selectedItemId = null;
 
         async function fetchState() {
