@@ -151,9 +151,15 @@
     <div id="view-dashboard" class="app-container">
         <header class="p-8 pb-4 flex justify-between items-center relative">
             <h1 class="text-[clamp(3.5rem,15vw,5rem)] font-extrabold tracking-tighter leading-none">Склад</h1>
-            <div id="search-trigger" onclick="handleSearchClick()"
-                class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0">
-                <i id="main-search-icon" data-lucide="search" class="w-5 h-5 text-slate-500"></i>
+            <div class="flex gap-3">
+                <div onclick="window.location.href='settings.html'"
+                    class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0">
+                    <i data-lucide="settings" class="w-5 h-5 text-slate-500"></i>
+                </div>
+                <div id="search-trigger" onclick="handleSearchClick()"
+                    class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0">
+                    <i id="main-search-icon" data-lucide="search" class="w-5 h-5 text-slate-500"></i>
+                </div>
             </div>
         </header>
 
@@ -374,21 +380,21 @@
                     </div>
 
                     <div class="grid grid-cols-2 gap-y-5 mb-10">
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="package" class="w-4 h-4 opacity-40"></i>
-                            <span class="text-sm font-bold">Остаток: ${item.qty} шт</span>
+                        <div class="flex items-start gap-2">
+                            <i data-lucide="package" class="w-4 h-4 opacity-40 mt-0.5"></i>
+                            <span class="text-sm font-bold">Остаток:<br>${item.qty} шт</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="trending-down" class="w-4 h-4 opacity-40"></i>
-                            <span class="text-sm font-bold">Расход: ${item.daily_spend?.toFixed(1) || 0} шт/д</span>
+                        <div class="flex items-start gap-2">
+                            <i data-lucide="trending-down" class="w-4 h-4 opacity-40 mt-0.5"></i>
+                            <span class="text-sm font-bold">Расход:<br>${item.daily_spend?.toFixed(1) || 0} шт/д</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="clock" class="w-4 h-4 opacity-40"></i>
-                            <span class="text-sm font-bold">Хватит на: ${item.days_left?.toFixed(1) || item.days?.toFixed(1) || 0} дн.</span>
+                        <div class="flex items-start gap-2">
+                            <i data-lucide="clock" class="w-4 h-4 opacity-40 mt-0.5"></i>
+                            <span class="text-sm font-bold">Хватит на:<br>${item.days_left?.toFixed(1) || item.days?.toFixed(1) || 0} дн.</span>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <i data-lucide="trending-up" class="w-4 h-4 opacity-40"></i>
-                            <span class="text-sm font-bold">Нужно: +${item.need}</span>
+                        <div class="flex items-start gap-2">
+                            <i data-lucide="trending-up" class="w-4 h-4 opacity-40 mt-0.5"></i>
+                            <span class="text-sm font-bold">Нужно:<br>+${item.need}</span>
                         </div>
                     </div>
 
