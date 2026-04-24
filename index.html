@@ -361,7 +361,7 @@
                     <div class="flex items-center gap-4 mb-8">
                         <div>
                             <h3 class="text-2xl font-extrabold tracking-tight leading-none mb-1">${item.name}</h3>
-                            <p class="text-sm font-bold opacity-40 uppercase tracking-tight">Портфель ${item.group || 'Общая'}</p>
+                            <p class="text-sm font-bold opacity-40 uppercase tracking-tight">${item.product_name || 'Общая категория'}</p>
                         </div>
                     </div>
 
@@ -396,7 +396,7 @@
             selectedItemId = id;
             const item = items.find(i => i.sku_id == id);
             document.getElementById('status-page-title').innerText = item.name;
-            document.getElementById('status-page-subtitle').innerText = `ID: ${item.sku_id} // ${item.group || 'Общая'}`;
+            document.getElementById('status-page-subtitle').innerText = `ID: ${item.sku_id} // ${item.product_name || 'Общая'}`;
             document.getElementById('view-dashboard').classList.add('view-hidden');
             document.getElementById('view-status').classList.remove('hidden');
         }
