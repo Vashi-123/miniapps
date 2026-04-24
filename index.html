@@ -263,6 +263,7 @@
                     .order('updated_at', { ascending: false });
 
                 if (error) throw error;
+                console.log("Fetched items from Supabase:", data);
                 items = data;
 
                 // --- Update dynamic date ---
@@ -278,7 +279,7 @@
                 filterAndRender();
                 updateTabCounts();
             } catch (e) {
-                console.error("Supabase error:", e);
+                console.error("Supabase fetch error:", e);
                 const list = document.getElementById('inventory-list');
                 list.innerHTML = `<div class="p-8 text-center opacity-50">Ошибка загрузки: ${e.message}</div>`;
             }
