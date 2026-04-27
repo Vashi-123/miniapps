@@ -142,20 +142,38 @@
         .view-hidden {
             display: none;
         }
+
+        #lock-screen {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
     </style>
 </head>
 
 <body class="pb-10 overflow-x-hidden">
+
+    <!-- LOCK SCREEN (Auth check) -->
+    <div id="lock-screen">
+        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+            <i data-lucide="lock" class="w-8 h-8 text-slate-400"></i>
+        </div>
+        <h2 id="lock-text" class="text-xl font-extrabold tracking-tight text-slate-900">Проверка доступа...</h2>
+        <p id="lock-subtext" class="text-sm font-medium text-slate-400 mt-2">Пожалуйста, подождите</p>
+    </div>
 
     <!-- VIEW 1: DASHBOARD -->
     <div id="view-dashboard" class="app-container">
         <header class="p-8 pb-4 flex justify-between items-center relative">
             <h1 class="text-[clamp(3.5rem,15vw,5rem)] font-extrabold tracking-tighter leading-none">Склад</h1>
             <div class="flex gap-3">
-                <div onclick="window.location.href='settings.html'"
-                    class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0">
-                    <i data-lucide="settings" class="w-5 h-5 text-slate-500"></i>
-                </div>
                 <div id="search-trigger" onclick="handleSearchClick()"
                     class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0">
                     <i id="main-search-icon" data-lucide="search" class="w-5 h-5 text-slate-500"></i>
@@ -259,7 +277,6 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        // --- CONFIGURATION (Injected via GitHub Actions) ---
         const SUPABASE_URL = "{{SUPABASE_URL}}";
         const SUPABASE_KEY = "{{SUPABASE_KEY}}";
         
@@ -268,6 +285,45 @@
         let items = [];
         let currentTab = 'sufficient';
         let selectedItemId = null;
+
+        async function checkAccess() {
+            try {
+                const lockScreen = document.getElementById('lock-screen');
+                const lockText = document.getElementById('lock-text');
+                const lockSubtext = document.getElementById('lock-subtext');
+
+                if (!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initDataUnsafe?.user) {
+                    lockText.innerText = "Доступ ограничен";
+                    lockSubtext.innerText = "Откройте приложение через Telegram бота";
+                    document.querySelector('.w-16').innerHTML = '<i data-lucide="shield-alert" class="w-8 h-8 text-red-500"></i>';
+                    lucide.createIcons();
+                    return;
+                }
+
+                const userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+                
+                const { data, error } = await _supabase
+                    .from('authorized_users')
+                    .select('id')
+                    .eq('telegram_id', userId);
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    lockScreen.style.display = 'none';
+                    await fetchState();
+                } else {
+                    lockText.innerText = "Доступ ограничен";
+                    lockSubtext.innerText = `Ваш ID (${userId}) не найден в списке разрешенных.`;
+                    document.querySelector('.w-16').innerHTML = '<i data-lucide="user-x" class="w-8 h-8 text-red-500"></i>';
+                    lucide.createIcons();
+                }
+            } catch (e) {
+                console.error("Auth error:", e);
+                document.getElementById('lock-text').innerText = "Ошибка авторизации";
+                document.getElementById('lock-subtext').innerText = e.message;
+            }
+        }
 
         async function fetchState() {
             try {
@@ -290,6 +346,15 @@
                     if (dateDisplay) dateDisplay.innerText = `Отчет от ${formattedDate}`;
                 }
 
+                // --- Проверка на админа для показа настроек ---
+                if (window.Telegram && window.Telegram.WebApp && window.Telegram.WebApp.initData) {
+                    const userId = window.Telegram.WebApp.initDataUnsafe?.user?.id;
+                    const { data: authData } = await _supabase.from('authorized_users').select('id').eq('telegram_id', userId);
+                    if (authData && authData.length > 0) {
+                        document.getElementById('settings-btn').style.display = 'flex';
+                    }
+                }
+
                 filterAndRender();
                 updateTabCounts();
             } catch (e) {
@@ -301,18 +366,39 @@
 
         async function updateStage(newStage) {
             try {
-                const { error } = await _supabase
+                // 1. Получаем ID пользователя из Telegram
+                if (!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initDataUnsafe?.user) {
+                    throw new Error("Запустите приложение через Telegram");
+                }
+                
+                const userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+                console.log("Checking permissions for user:", userId);
+
+                // 2. Проверяем наличие пользователя в таблице разрешенных (в Supabase)
+                const { data: authData, error: authError } = await _supabase
+                    .from('authorized_users')
+                    .select('id')
+                    .eq('telegram_id', userId);
+
+                if (authError) throw authError;
+
+                if (!authData || authData.length === 0) {
+                    throw new Error("У вас нет прав для изменения статуса (ID не в списке)");
+                }
+
+                // 3. Если проверка прошла - обновляем статус
+                const { error: updateError } = await _supabase
                     .from('inventory')
                     .update({ stage: newStage })
                     .eq('sku_id', selectedItemId);
 
-                if (error) throw error;
+                if (updateError) throw updateError;
 
                 closeStatusPage();
                 await fetchState();
             } catch (e) {
                 console.error("Update error:", e);
-                alert("Ошибка при обновлении статуса");
+                alert("Ошибка: " + e.message);
             }
         }
 
@@ -433,7 +519,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
-            fetchState();
+            checkAccess(); // Сначала проверяем доступ
             document.getElementById('search-input').oninput = filterAndRender;
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.ready();
