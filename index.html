@@ -306,7 +306,7 @@
                 
                 const { data, error } = await _supabase
                     .from('authorized_users')
-                    .select('id')
+                    .select('telegram_id')
                     .eq('telegram_id', userId);
 
                 if (error) throw error;
