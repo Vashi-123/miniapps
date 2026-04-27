@@ -287,6 +287,7 @@
         let items = [];
         let currentTab = 'sufficient';
         let selectedItemId = null;
+        let userAccess = 'view'; // Роль по умолчанию
 
         async function checkAccess() {
             try {
@@ -306,12 +307,15 @@
                 
                 const { data, error } = await _supabase
                     .from('authorized_users')
-                    .select('telegram_id')
+                    .select('telegram_id, access')
                     .eq('telegram_id', userId);
 
                 if (error) throw error;
 
                 if (data && data.length > 0) {
+                    // ДОСТУП РАЗРЕШЕН
+                    userAccess = data[0].access || 'view';
+                    console.log("User access level:", userAccess);
                     lockScreen.style.display = 'none';
                     await fetchState();
                 } else {
@@ -486,7 +490,11 @@
                         </div>
                     </div>
 
-                    <button onclick="openStatusPage('${item.sku_id}')" class="w-full bg-black text-white btn-action shadow-sm">Изменить статус</button>
+                    ${userAccess === 'all' ? `
+                        <button onclick="openStatusPage('${item.sku_id}')" class="w-full bg-black text-white btn-action shadow-sm">Изменить статус</button>
+                    ` : `
+                        <div class="w-full bg-slate-50 text-slate-400 py-3 text-center rounded-2xl text-xs font-bold uppercase tracking-widest">Только просмотр</div>
+                    `}
                 `;
                 list.appendChild(card);
             });
