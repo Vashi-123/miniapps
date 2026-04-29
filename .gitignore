@@ -1,8 +1,6 @@
-*
-!.gitignore
-!index.html
-!.github/
-stock_code.py
-!stock.html
-!daily_report.html
-!backend/
+# Simple ignore for frontend repo
+node_modules/
+.DS_Store
+*.log
+__pycache__/
+.env
