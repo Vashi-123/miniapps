@@ -2,3 +2,7 @@
 !.gitignore
 !index.html
 !.github/
+stock_code.py
+!stock.html
+!daily_report.html
+!backend/

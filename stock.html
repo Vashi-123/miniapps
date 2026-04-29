@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>Procurement App</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Outfit Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;600;800&display=swap" rel="stylesheet">
+    <!-- Lucide Icons -->
+    <script src="https://unpkg.com/lucide@latest"></script>
+    <!-- Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <!-- Favicon to fix 404 -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>📦</text></svg>">
+    <style>
+        body {
+            font-family: 'Outfit', sans-serif;
+            background-color: #ffffff;
+            color: #1a1a1a;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .card-modern {
+            border-radius: 32px;
+            padding: 24px;
+            margin-bottom: 20px;
+            border: 1px solid rgba(0, 0, 0, 0.08);
+            transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* User Custom Colors - Pastel Palette */
+        .card-needs {
+            background-color: #FFE5E8;
+            color: #1a1a1a;
+        }
+
+        .card-pending {
+            background-color: #F6F1EC;
+            color: #1a1a1a;
+        }
+
+        .card-partial {
+            background-color: #E5F6FF;
+            color: #1a1a1a;
+        }
+
+        .card-full {
+            background-color: #F3FFEF;
+            color: #1a1a1a;
+        }
+
+        .card-sufficient {
+            background-color: #E6FFFA;
+            color: #1a1a1a;
+            border: 1px solid rgba(0, 128, 128, 0.1);
+        }
+
+        .tag {
+            background: rgba(255, 255, 255, 0.6);
+            padding: 4px 14px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 700;
+            color: #1a1a1a;
+            white-space: nowrap;
+        }
+
+        .tabs-simple {
+            display: flex;
+            gap: 16px;
+            padding: 0 20px;
+            margin-bottom: 24px;
+            overflow-x: auto;
+        }
+
+        .tab-btn {
+            font-size: 15px;
+            font-weight: 800;
+            color: #d1d5db;
+            white-space: nowrap;
+            transition: color 0.2s;
+        }
+
+        .tab-btn.active {
+            color: #1a1a1a;
+        }
+
+        .tab-btn .count {
+            font-size: 12px;
+            color: #9ca3af;
+            margin-left: 4px;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .btn-action {
+            padding: 1.1rem;
+            border-radius: 1.25rem;
+            font-weight: 800;
+            font-size: clamp(0.75rem, 3.5vw, 0.9rem);
+            transition: transform 0.1s;
+        }
+
+        .btn-action:active {
+            transform: scale(0.96);
+        }
+
+        .app-container {
+            max-width: 600px;
+            margin: 0 auto;
+            min-height: 100vh;
+            padding-top: 20px;
+        }
+
+        /* Status Page Specifics */
+        .status-option {
+            padding: 16px;
+            border-radius: 24px;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-weight: 700;
+            transition: all 0.2s;
+            text-align: left;
+            border: 1px solid rgba(0, 0, 0, 0.05);
+        }
+
+        .status-option:active {
+            transform: scale(0.97);
+        }
+
+        /* View Transitions */
+        .view-hidden {
+            display: none;
+        }
+
+        #lock-screen {
+            position: fixed;
+            inset: 0;
+            background: white;
+            z-index: 9999;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            padding: 40px;
+        }
+    </style>
+</head>
+
+<body class="pb-10 overflow-x-hidden">
+
+    <!-- LOCK SCREEN (Auth check) -->
+    <div id="lock-screen">
+        <div class="w-16 h-16 bg-slate-100 rounded-full flex items-center justify-center mb-6 animate-bounce">
+            <i data-lucide="lock" class="w-8 h-8 text-slate-400"></i>
+        </div>
+        <h2 id="lock-text" class="text-xl font-extrabold tracking-tight text-slate-900">Checking access...</h2>
+        <p id="lock-subtext" class="text-sm font-medium text-slate-400 mt-2">Please wait</p>
+    </div>
+
+    <!-- VIEW 1: DASHBOARD -->
+    <div id="view-dashboard" class="app-container">
+        <header class="flex justify-between items-center mb-6 px-8 pt-8">
+            <button onclick="window.location.href='index.html'" 
+                class="w-12 h-12 bg-white rounded-full flex items-center justify-center shadow-sm active:scale-90 transition-transform border border-slate-100">
+                <i data-lucide="chevron-left" class="w-6 h-6 text-slate-900"></i>
+            </button>
+            <h1 class="text-3xl font-extrabold tracking-tight">Stock</h1>
+            <div id="search-trigger" onclick="handleSearchClick()"
+                class="w-12 h-12 bg-slate-100 rounded-full flex items-center justify-center cursor-pointer active:scale-95 transition-transform shrink-0">
+                <i id="main-search-icon" data-lucide="search" class="w-5 h-5 text-slate-500"></i>
+            </div>
+        </header>
+
+        <div id="search-bar" class="px-8 mb-6 hidden">
+            <input type="text" id="search-input" placeholder="Search by name or ID..."
+                class="w-full bg-slate-50 border-2 border-slate-100 rounded-2xl py-4 px-6 text-sm font-bold focus:outline-none focus:border-black transition-all">
+        </div>
+
+        <div class="px-8 mb-8 flex items-center">
+            <div class="flex items-center gap-2">
+                <div class="w-2.5 h-2.5 bg-green-500 rounded-full animate-pulse"></div>
+                <span class="text-sm font-bold text-slate-900 tracking-tight" id="report-date-display">Report from loading...</span>
+            </div>
+        </div>
+
+        <div class="tabs-simple no-scrollbar">
+            <button onclick="selectTab('sufficient')" id="tab-sufficient" class="tab-btn active">Sufficient <span class="count"
+                    id="count-sufficient">0</span></button>
+            <button onclick="selectTab('needs')" id="tab-needs" class="tab-btn">Buy <span class="count"
+                    id="count-needs">0</span></button>
+            <button onclick="selectTab('pending')" id="tab-pending" class="tab-btn">Pending <span class="count"
+                    id="count-pending">0</span></button>
+            <button onclick="selectTab('partial')" id="tab-partial" class="tab-btn">Partial <span class="count"
+                    id="count-partial">0</span></button>
+            <button onclick="selectTab('full')" id="tab-full" class="tab-btn">Done <span class="count"
+                    id="count-full">0</span></button>
+        </div>
+
+        <div id="inventory-list" class="px-6">
+            <!-- JS -->
+        </div>
+    </div>
+
+    <!-- VIEW 2: STATUS MANAGEMENT PAGE -->
+    <div id="view-status" class="app-container fixed inset-0 bg-white z-[500] hidden flex-col">
+        <header class="p-8 pb-4 flex items-center gap-6">
+            <button onclick="closeStatusPage()"
+                class="w-14 h-14 bg-slate-50 rounded-full flex items-center justify-center active:scale-90 transition-transform">
+                <i data-lucide="chevron-left" class="w-7 h-7"></i>
+            </button>
+            <h1 class="text-xl font-extrabold tracking-tight">Change Status</h1>
+        </header>
+
+        <div class="px-8 pt-6 flex-grow overflow-y-auto no-scrollbar pb-10">
+            <div class="mb-12">
+                <h2 class="text-4xl font-extrabold tracking-tighter leading-tight" id="status-page-title">Item Name</h2>
+                <p class="text-sm font-bold text-slate-400 mt-3" id="status-page-subtitle">ID: 0000 // CATEGORY</p>
+            </div>
+
+            <div class="space-y-4">
+                <button onclick="updateStage('needs')" class="status-option w-full bg-[#FFE5E8]">
+                    <div class="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center shrink-0">
+                        <i data-lucide="shopping-cart" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-base font-extrabold tracking-tight">Needs Procurement</p>
+                        <p class="text-[10px] opacity-40 font-bold uppercase">Urgent item purchase</p>
+                    </div>
+                </button>
+
+                <button onclick="updateStage('pending')" class="status-option w-full bg-[#F6F1EC]">
+                    <div class="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center shrink-0">
+                        <i data-lucide="clock" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-base font-extrabold tracking-tight">Pending Delivery</p>
+                        <p class="text-[11px] opacity-40 font-bold uppercase">Item is paid or in transit</p>
+                    </div>
+                </button>
+
+                <button onclick="updateStage('partial')" class="status-option w-full bg-[#E5F6FF]">
+                    <div class="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center shrink-0">
+                        <i data-lucide="package-plus" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-base font-extrabold tracking-tight">Partial</p>
+                        <p class="text-[11px] opacity-40 font-bold uppercase">Partial shipment arrived</p>
+                    </div>
+                </button>
+
+                <button onclick="updateStage('full')" class="status-option w-full bg-[#F3FFEF]">
+                    <div class="w-12 h-12 bg-black/5 rounded-full flex items-center justify-center shrink-0">
+                        <i data-lucide="check-circle" class="w-6 h-6"></i>
+                    </div>
+                    <div>
+                        <p class="text-base font-extrabold tracking-tight">Procurement Completed</p>
+                        <p class="text-[11px] opacity-40 font-bold uppercase">Item fully in stock</p>
+                    </div>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Supabase Library -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <script>
+        const SUPABASE_URL = "{{SUPABASE_URL}}";
+        const SUPABASE_KEY = "{{SUPABASE_KEY}}";
+        
+        const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
+
+        let items = [];
+        let currentTab = 'sufficient';
+        let selectedItemId = null;
+        let userAccess = 'view'; // Role default
+
+        async function checkAccess() {
+            try {
+                const lockScreen = document.getElementById('lock-screen');
+                const lockText = document.getElementById('lock-text');
+                const lockSubtext = document.getElementById('lock-subtext');
+
+                if (!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initDataUnsafe?.user) {
+                    lockText.innerText = "Access Limited";
+                    lockSubtext.innerText = "Open via Telegram Bot";
+                    document.querySelector('.w-16').innerHTML = '<i data-lucide="shield-alert" class="w-8 h-8 text-red-500"></i>';
+                    lucide.createIcons();
+                    return;
+                }
+
+                const userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+                
+                const { data, error } = await _supabase
+                    .from('authorized_users')
+                    .select('telegram_id, access')
+                    .eq('telegram_id', userId);
+
+                if (error) throw error;
+
+                if (data && data.length > 0) {
+                    userAccess = data[0].access || 'view';
+                    lockScreen.style.display = 'none';
+                    await fetchState();
+                } else {
+                    lockText.innerText = "Access Denied";
+                    lockSubtext.innerText = `Your ID (${userId}) is not in the authorized list.`;
+                    document.querySelector('.w-16').innerHTML = '<i data-lucide="user-x" class="w-8 h-8 text-red-500"></i>';
+                    lucide.createIcons();
+                }
+            } catch (e) {
+                console.error("Auth error:", e);
+                // Default to view-only on error
+            }
+        }
+
+        async function fetchState() {
+            try {
+                const { data, error } = await _supabase
+                    .from('inventory')
+                    .select('*')
+                    .order('updated_at', { ascending: false });
+
+                if (error) throw error;
+                items = data;
+
+                if (items.length > 0 && items[0].updated_at) {
+                    const lastUpdate = new Date(items[0].updated_at);
+                    const formattedDate = lastUpdate.toLocaleDateString('en-US', {
+                        day: '2-digit', month: '2-digit', year: 'numeric'
+                    });
+                    const dateDisplay = document.getElementById('report-date-display');
+                    if (dateDisplay) dateDisplay.innerText = `Report from ${formattedDate}`;
+                }
+
+                filterAndRender();
+                updateTabCounts();
+            } catch (e) {
+                console.error("Fetch error:", e);
+                const list = document.getElementById('inventory-list');
+                list.innerHTML = `<div class="p-8 text-center opacity-50">Fetch Error: ${e.message}</div>`;
+            }
+        }
+
+        async function updateStage(newStage) {
+            try {
+                if (!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initDataUnsafe?.user) {
+                    throw new Error("Launch via Telegram");
+                }
+                
+                const userId = window.Telegram.WebApp.initDataUnsafe.user.id;
+
+                const { data: authData, error: authError } = await _supabase
+                    .from('authorized_users')
+                    .select('id')
+                    .eq('telegram_id', userId);
+
+                if (authError) throw authError;
+
+                if (!authData || authData.length === 0) {
+                    throw new Error("No permissions to change status");
+                }
+
+                const { error: updateError } = await _supabase
+                    .from('inventory')
+                    .update({ stage: newStage })
+                    .eq('sku_id', selectedItemId);
+
+                if (updateError) throw updateError;
+
+                closeStatusPage();
+                await fetchState();
+            } catch (e) {
+                console.error("Update error:", e);
+                alert("Error: " + e.message);
+            }
+        }
+
+        function handleSearchClick() {
+            toggleSearch();
+        }
+
+        function toggleSearch() {
+            const bar = document.getElementById('search-bar');
+            const icon = document.getElementById('main-search-icon');
+            bar.classList.toggle('hidden');
+            if (!bar.classList.contains('hidden')) {
+                icon.setAttribute('data-lucide', 'x');
+                document.getElementById('search-input').focus();
+            } else {
+                icon.setAttribute('data-lucide', 'search');
+                document.getElementById('search-input').value = '';
+                filterAndRender();
+            }
+            lucide.createIcons();
+        }
+
+        function selectTab(tabId) {
+            currentTab = tabId;
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            const tab = document.getElementById(`tab-${tabId}`);
+            if (tab) tab.classList.add('active');
+            filterAndRender();
+        }
+
+        function filterAndRender() {
+            const query = document.getElementById('search-input').value.toLowerCase();
+            const filtered = items.filter(i => {
+                const matchesTab = i.stage === currentTab;
+                const matchesSearch = i.name.toLowerCase().includes(query) || i.sku_id?.toString().includes(query);
+                return matchesTab && matchesSearch;
+            });
+            renderList(filtered);
+        }
+
+        function renderList(data) {
+            const list = document.getElementById('inventory-list');
+            list.innerHTML = '';
+
+            if (data.length === 0) {
+                list.innerHTML = `<div class="p-20 text-center opacity-20">Empty</div>`;
+                return;
+            }
+
+            data.forEach(item => {
+                const card = document.createElement('div');
+                card.className = `card-modern card-${item.stage}`;
+
+                card.innerHTML = `
+                    <div class="flex gap-2 mb-6">
+                        <span class="tag text-black">${item.group || 'General'}</span>
+                        <span class="tag text-black">ID:${item.sku_id}</span>
+                    </div>
+
+                    <div class="flex items-center gap-4 mb-8">
+                        <div>
+                            <h3 class="text-2xl font-extrabold tracking-tight leading-none mb-1">${item.name}</h3>
+                            <p class="text-sm font-bold opacity-40 uppercase tracking-tight">${item.product_name || 'General Category'}</p>
+                        </div>
+                    </div>
+
+                    <div class="grid grid-cols-2 gap-y-5 mb-10">
+                        <div class="flex items-start gap-2">
+                            <i data-lucide="package" class="w-4 h-4 opacity-40 mt-0.5"></i>
+                            <span class="text-sm font-bold">Stock:<br>${item.qty} pcs</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i data-lucide="trending-down" class="w-4 h-4 opacity-40 mt-0.5"></i>
+                            <span class="text-sm font-bold">Daily Spend:<br>${item.daily_spend?.toFixed(1) || 0} pcs/d</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i data-lucide="clock" class="w-4 h-4 opacity-40 mt-0.5"></i>
+                            <span class="text-sm font-bold">Days Left:<br>${item.days_left?.toFixed(1) || item.days?.toFixed(1) || 0} d</span>
+                        </div>
+                        <div class="flex items-start gap-2">
+                            <i data-lucide="trending-up" class="w-4 h-4 opacity-40 mt-0.5"></i>
+                            <span class="text-sm font-bold">Need:<br>+${item.need}</span>
+                        </div>
+                    </div>
+
+                    ${(userAccess === 'all') ? `
+                        <button onclick="openStatusPage('${item.sku_id}')" class="w-full bg-black text-white btn-action shadow-sm">Change Status</button>
+                    ` : `
+                        <div class="w-full bg-slate-50 text-slate-400 py-3 text-center rounded-2xl text-xs font-bold uppercase tracking-widest">Read Only</div>
+                    `}
+                `;
+                list.appendChild(card);
+            });
+            lucide.createIcons();
+            updateTabCounts();
+        }
+
+        function openStatusPage(id) {
+            selectedItemId = id;
+            const item = items.find(i => i.sku_id == id);
+            document.getElementById('status-page-title').innerText = item.name;
+            document.getElementById('status-page-subtitle').innerText = `ID: ${item.sku_id} // ${item.product_name || 'General'}`;
+            document.getElementById('view-dashboard').classList.add('view-hidden');
+            document.getElementById('view-status').classList.remove('hidden');
+        }
+
+        function closeStatusPage() {
+            document.getElementById('view-dashboard').classList.remove('view-hidden');
+            document.getElementById('view-status').classList.add('hidden');
+            selectedItemId = null;
+        }
+
+        function updateTabCounts() {
+            const counts = { needs: 0, pending: 0, partial: 0, full: 0, sufficient: 0 };
+            items.forEach(i => { if(counts[i.stage] !== undefined) counts[i.stage]++; });
+            
+            document.getElementById('count-needs').innerText = counts.needs;
+            document.getElementById('count-pending').innerText = counts.pending;
+            document.getElementById('count-partial').innerText = counts.partial;
+            document.getElementById('count-full').innerText = counts.full;
+            document.getElementById('count-sufficient').innerText = counts.sufficient;
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAccess(); 
+            document.getElementById('search-input').oninput = filterAndRender;
+            if (window.Telegram && window.Telegram.WebApp) {
+                window.Telegram.WebApp.ready();
+                window.Telegram.WebApp.expand();
+            }
+            lucide.createIcons();
+        });
+    </script>
+</body>
+
+</html>
