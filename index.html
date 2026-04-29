@@ -156,7 +156,7 @@
                 const userId = window.Telegram.WebApp.initDataUnsafe.user.id;
                 const { data, error } = await _supabase
                     .from('authorized_users')
-                    .select('access')
+                    .select('stock_access, report_access')
                     .eq('telegram_id', userId);
 
                 if (error) throw error;
