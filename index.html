@@ -65,16 +65,18 @@
     <div id="lock-screen">
         <div class="relative w-24 h-24 mb-8 flex items-center justify-center">
             <!-- Outer Glow -->
-            <div class="absolute inset-0 bg-blue-500/10 rounded-full blur-xl animate-pulse"></div>
+            <div id="status-glow" class="absolute inset-0 bg-blue-500/10 rounded-full blur-xl animate-pulse"></div>
             <!-- Spinning Ring -->
-            <div class="absolute inset-0 rounded-full border-[3px] border-slate-100 border-t-blue-600 animate-spin"></div>
+            <div id="status-ring" class="absolute inset-0 rounded-full border-[3px] border-slate-100 border-t-blue-600 animate-spin"></div>
             <!-- Center Icon Box -->
             <div class="relative w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center border border-slate-100">
-                <i data-lucide="shield-check" class="w-8 h-8 text-blue-600"></i>
+                <div id="status-icon-container">
+                    <i data-lucide="shield-check" class="w-8 h-8 text-blue-600"></i>
+                </div>
             </div>
         </div>
-        <h2 id="status-text" class="text-2xl font-extrabold tracking-tight text-slate-900">Security Check</h2>
-        <p id="status-subtext" class="text-base font-medium text-slate-400 mt-2">Verifying your identity...</p>
+        <h2 id="status-text" class="text-2xl font-extrabold tracking-tight text-slate-900 text-center">Security Check</h2>
+        <p id="status-subtext" class="text-base font-medium text-slate-400 mt-2 text-center">Verifying your identity...</p>
     </div>
 
     <div id="portal-ui" class="app-container hidden">
@@ -120,11 +122,34 @@
         const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tc2pta3ZreXRpZWhxZHZzY2x0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njg0ODM3MSwiZXhwIjoyMDkyNDI0MzcxfQ.R93Uw0jHyirg3JRC3lcVOCDqg-NEDpEMAfcRrlXv-sI";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
+        function updateStatus(title, sub, icon, colorClass, spinning = true) {
+            document.getElementById('status-text').innerText = title;
+            document.getElementById('status-subtext').innerText = sub;
+            
+            const ring = document.getElementById('status-ring');
+            const glow = document.getElementById('status-glow');
+            const iconContainer = document.getElementById('status-icon-container');
+
+            // Set Color
+            const borderClass = spinning ? `border-t-${colorClass.colorName}-600` : `border-${colorClass.colorName}-500`;
+            ring.className = `absolute inset-0 rounded-full border-[3px] border-slate-100 ${borderClass} ${spinning ? 'animate-spin' : ''}`;
+            glow.className = `absolute inset-0 ${colorClass.bg} rounded-full blur-xl animate-pulse`;
+            
+            // Set Icon
+            iconContainer.innerHTML = `<i data-lucide="${icon}" class="w-8 h-8 ${colorClass.text}"></i>`;
+            lucide.createIcons();
+        }
+
+        const COLORS = {
+            blue: { colorName: 'blue', bg: 'bg-blue-500/10', text: 'text-blue-600' },
+            orange: { colorName: 'orange', bg: 'bg-orange-500/10', text: 'text-orange-500' },
+            red: { colorName: 'red', bg: 'bg-red-500/10', text: 'text-red-500' }
+        };
+
         async function checkAccess() {
             try {
                 if (!window.Telegram || !window.Telegram.WebApp || !window.Telegram.WebApp.initDataUnsafe?.user) {
-                    document.getElementById('status-text').innerText = "Access Limited";
-                    document.getElementById('status-subtext').innerText = "Open via Telegram Bot";
+                    updateStatus("Access Limited", "Open via Telegram Bot", "lock", COLORS.orange, false);
                     return;
                 }
 
@@ -140,13 +165,11 @@
                     const access = data[0].access || 'view';
                     handleNavigation(access);
                 } else {
-                    document.getElementById('status-text').innerText = "Access Denied";
-                    document.getElementById('status-subtext').innerText = `ID ${userId} is not authorized`;
+                    updateStatus("Access Denied", `ID ${userId} is not authorized`, "shield-off", COLORS.red, false);
                 }
             } catch (e) {
                 console.error(e);
-                document.getElementById('status-text').innerText = "Error";
-                document.getElementById('status-subtext').innerText = e.message;
+                updateStatus("System Error", e.message, "alert-circle", COLORS.red, false);
             }
         }
 
