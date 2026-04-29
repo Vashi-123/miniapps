@@ -170,34 +170,19 @@
 
                 document.getElementById('date-label').innerText = `${startB} VS ${startA}`;
 
-                const url = `${API_BASE}/api/ai/analyze?start_a=${startA}&end_a=${startA}&start_b=${startB}&end_b=${startB}`;
-                const response = await fetch(url);
-                
-                if (!response.ok) {
-                    const errText = await response.text();
-                    throw new Error(`HTTP ${response.status}: ${errText || 'No response body'}. URL: ${url}`);
-                }
-                
+                const response = await fetch(`${API_BASE}/api/ai/analyze?start_a=${startA}&end_a=${startA}&start_b=${startB}&end_b=${startB}`);
                 const result = await response.json();
                 
-                if (!result.payload) {
-                    throw new Error(`Missing payload in response: ${JSON.stringify(result)}`);
-                }
-
                 renderUI(result.payload);
                 document.getElementById('lock-screen').style.display = 'none';
                 lucide.createIcons();
             } catch (e) {
                 console.error(e);
                 document.getElementById('lock-screen').innerHTML = `
-                    <div class="p-8 text-center overflow-auto max-h-screen">
+                    <div class="p-8 text-center">
                         <i data-lucide="alert-circle" class="w-12 h-12 text-red-500 mx-auto mb-4"></i>
-                        <h2 class="text-xl font-bold text-red-600">Debug Info</h2>
-                        <div class="mt-4 p-4 bg-slate-50 rounded-2xl text-[10px] font-mono text-left break-all text-slate-600 space-y-2">
-                            <p><span class="font-bold text-slate-800">Message:</span> ${e.message}</p>
-                            <p><span class="font-bold text-slate-800">Stack:</span> ${e.stack?.split('\n')[0]}</p>
-                        </div>
-                        <button onclick="location.reload()" class="mt-6 px-6 py-3 bg-black text-white rounded-xl text-xs font-bold uppercase tracking-widest">Retry</button>
+                        <h2 class="text-xl font-bold">Data Error</h2>
+                        <p class="text-sm text-slate-400 mt-2">${e.message}</p>
                     </div>
                 `;
                 lucide.createIcons();
