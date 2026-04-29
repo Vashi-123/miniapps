@@ -158,22 +158,31 @@
 
                 document.getElementById('view-report').classList.remove('hidden');
                 
-                const today = new Date();
-                const yesterday = new Date(today);
-                yesterday.setDate(yesterday.getDate() - 1);
-                const dayBefore = new Date(today);
-                dayBefore.setDate(dayBefore.getDate() - 2);
+                // Fetch pre-calculated report from Supabase
+                const { data: reportRow, error: reportError } = await _supabase
+                    .from('analytical_reports')
+                    .select('data, updated_at')
+                    .eq('report_id', 'daily_analytics')
+                    .single();
 
-                const formatDate = (d) => d.toISOString().split('T')[0];
-                const startA = formatDate(dayBefore);
-                const startB = formatDate(yesterday);
+                if (reportError || !reportRow) {
+                    throw new Error("Report not found in database. Please wait for the daily update.");
+                }
 
-                document.getElementById('date-label').innerText = `${startB} VS ${startA}`;
-
-                const response = await fetch(`${API_BASE}/api/ai/analyze?start_a=${startA}&end_a=${startA}&start_b=${startB}&end_b=${startB}`);
-                const result = await response.json();
+                let reportData = reportRow.data;
+                if (typeof reportData === 'string') {
+                    try {
+                        reportData = JSON.parse(reportData);
+                    } catch (e) {
+                        console.error("JSON Parse Error", e);
+                    }
+                }
                 
-                renderUI(result.payload);
+                const updatedAt = new Date(reportRow.updated_at);
+                
+                document.getElementById('date-label').innerText = `Report Updated: ${updatedAt.toLocaleDateString()}`;
+                
+                renderUI(reportData);
                 document.getElementById('lock-screen').style.display = 'none';
                 lucide.createIcons();
             } catch (e) {
