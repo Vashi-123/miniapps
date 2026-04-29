@@ -62,13 +62,19 @@
 </head>
 <body>
 
-    <!-- AUTH LOADER -->
     <div id="lock-screen">
-        <div class="w-16 h-16 bg-slate-50 rounded-full flex items-center justify-center mb-6 animate-spin">
-            <i data-lucide="shield-check" class="w-8 h-8 text-slate-400"></i>
+        <div class="relative w-24 h-24 mb-8 flex items-center justify-center">
+            <!-- Outer Glow -->
+            <div class="absolute inset-0 bg-blue-500/10 rounded-full blur-xl animate-pulse"></div>
+            <!-- Spinning Ring -->
+            <div class="absolute inset-0 rounded-full border-[3px] border-slate-100 border-t-blue-600 animate-spin"></div>
+            <!-- Center Icon Box -->
+            <div class="relative w-16 h-16 bg-white rounded-2xl shadow-xl flex items-center justify-center border border-slate-100">
+                <i data-lucide="shield-check" class="w-8 h-8 text-blue-600"></i>
+            </div>
         </div>
-        <h2 id="status-text" class="text-xl font-extrabold tracking-tight text-slate-900">Verifying Access...</h2>
-        <p id="status-subtext" class="text-sm font-medium text-slate-400 mt-2">Please wait a moment</p>
+        <h2 id="status-text" class="text-2xl font-extrabold tracking-tight text-slate-900">Security Check</h2>
+        <p id="status-subtext" class="text-base font-medium text-slate-400 mt-2">Verifying your identity...</p>
     </div>
 
     <div id="portal-ui" class="app-container hidden">
@@ -170,6 +176,7 @@
         }
 
         document.addEventListener('DOMContentLoaded', () => {
+            lucide.createIcons();
             if (window.Telegram && window.Telegram.WebApp) {
                 window.Telegram.WebApp.ready();
                 window.Telegram.WebApp.expand();
