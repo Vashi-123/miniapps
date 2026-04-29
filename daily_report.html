@@ -170,7 +170,7 @@
 
                 document.getElementById('date-label').innerText = `${startB} VS ${startA}`;
 
-                const response = await fetch(`${API_BASE}/analyze_period?start_a=${startA}&end_a=${startA}&start_b=${startB}&end_b=${startB}`);
+                const response = await fetch(`${API_BASE}/api/ai/analyze?start_a=${startA}&end_a=${startA}&start_b=${startB}&end_b=${startB}`);
                 const result = await response.json();
                 
                 renderUI(result.payload);
