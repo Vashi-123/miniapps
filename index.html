@@ -118,8 +118,8 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        const SUPABASE_URL = "https://mmsjmkvkytiehqdvsclt.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tc2pta3ZreXRpZWhxZHZzY2x0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njg0ODM3MSwiZXhwIjoyMDkyNDI0MzcxfQ.R93Uw0jHyirg3JRC3lcVOCDqg-NEDpEMAfcRrlXv-sI";
+        const SUPABASE_URL = "__SUPABASE_URL__";
+        const SUPABASE_KEY = "__SUPABASE_KEY__";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
         function updateStatus(title, sub, icon, colorClass, spinning = true) {
@@ -162,8 +162,7 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    const access = data[0].access || 'view';
-                    handleNavigation(access);
+                    handleNavigation(data[0]);
                 } else {
                     updateStatus("Access Denied", `ID ${userId} is not authorized`, "shield-off", COLORS.red, false);
                 }
@@ -173,10 +172,13 @@
             }
         }
 
-        function handleNavigation(access) {
-            const hasStock = access === 'all' || access.includes('stock');
-            const hasReport = access === 'all' || access.includes('report');
-            const isAdmin = access === 'all';
+        function handleNavigation(user) {
+            const { stock_access, report_access } = user;
+            const hasStock = stock_access && stock_access !== 'none';
+            const hasReport = report_access && report_access !== 'none';
+            const isAdmin = stock_access === 'all' || report_access === 'all'; // Conceptually
+
+            console.log('Access:', { stock_access, report_access }, 'hasStock:', hasStock, 'hasReport:', hasReport);
 
             // Если доступ только к одному - редирект сразу
             if (hasStock && !hasReport && !isAdmin) {
@@ -192,8 +194,8 @@
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('portal-ui').classList.remove('hidden');
 
-            if (hasStock) document.getElementById('btn-stock').classList.remove('hidden');
-            if (hasReport) document.getElementById('btn-report').classList.remove('hidden');
+            if (hasStock || isAdmin) document.getElementById('btn-stock').classList.remove('hidden');
+            if (hasReport || isAdmin) document.getElementById('btn-report').classList.remove('hidden');
             
             lucide.createIcons();
         }

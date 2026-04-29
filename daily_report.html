@@ -109,10 +109,10 @@
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <script>
-        const SUPABASE_URL = "https://mmsjmkvkytiehqdvsclt.supabase.co";
-        const SUPABASE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1tc2pta3ZreXRpZWhxZHZzY2x0Iiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc3Njg0ODM3MSwiZXhwIjoyMDkyNDI0MzcxfQ.R93Uw0jHyirg3JRC3lcVOCDqg-NEDpEMAfcRrlXv-sI";
+        const SUPABASE_URL = "__SUPABASE_URL__";
+        const SUPABASE_KEY = "__SUPABASE_KEY__";
         const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        const API_BASE = "http://192.168.55.112:8000";
+        const API_BASE = "__API_BASE__";
 
         function formatCompact(val) {
             const abs = Math.abs(val);
