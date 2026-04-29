@@ -180,6 +180,12 @@
 
             console.log('Access:', { stock_access, report_access }, 'hasStock:', hasStock, 'hasReport:', hasReport);
 
+            // Если доступа нет ни к чему - сразу показываем ошибку
+            if (!hasStock && !hasReport && !isAdmin) {
+                updateStatus("Access Limited", "No modules assigned to your account", "shield-off", COLORS.orange, false);
+                return;
+            }
+
             // Если доступ только к одному - редирект сразу
             if (hasStock && !hasReport && !isAdmin) {
                 location.href = 'stock.html';

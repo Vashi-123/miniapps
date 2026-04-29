@@ -313,7 +313,16 @@
                 if (error) throw error;
 
                 if (data && data.length > 0) {
-                    userAccess = data[0].stock_access || 'none';
+                    const user = data[0];
+                    userAccess = user.stock_access || 'none';
+                    
+                    // Скрываем кнопку назад, если нет доступа к аналитике
+                    const hasReport = user.report_access && user.report_access !== 'none';
+                    if (!hasReport) {
+                        const backBtn = document.querySelector('button[onclick*="index.html"]');
+                        if (backBtn) backBtn.style.display = 'none';
+                    }
+
                     lockScreen.style.display = 'none';
                     await fetchState();
                 } else {

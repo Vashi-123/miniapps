@@ -134,8 +134,16 @@
                     .eq('telegram_id', userId);
 
                 if (data && data.length > 0) {
-                    const access = data[0].report_access;
-                    return access && access !== 'none';
+                    const user = data[0];
+                    
+                    // Скрываем кнопку назад, если нет доступа к стоку
+                    const hasStock = user.stock_access && user.stock_access !== 'none';
+                    if (!hasStock) {
+                        const backBtn = document.querySelector('button[onclick*="index.html"]');
+                        if (backBtn) backBtn.style.display = 'none';
+                    }
+
+                    return user.report_access && user.report_access !== 'none';
                 }
                 return false;
             } catch (e) { return false; }
