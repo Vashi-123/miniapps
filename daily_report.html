@@ -468,8 +468,8 @@
                                         const isOther = p.name.toLowerCase().includes('other');
                                         let displayName = p.name.replace(/\bitems\b/i, 'products');
                                         return `
-                                            <div class="flex justify-between items-center text-[11px]">
-                                                <span class="font-bold opacity-70 truncate max-w-[200px] text-slate-600">${displayName}</span>
+                                            <div class="flex justify-between items-center text-[11px] ${isOther ? 'italic opacity-50' : ''}">
+                                                <span class="font-bold truncate max-w-[200px] text-slate-600">${displayName}</span>
                                                 <span class="font-extrabold text-slate-900">${formatCompact(p.rev_a)} → ${formatCompact(p.rev_b)}</span>
                                             </div>
                                         `;
