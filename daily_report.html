@@ -444,40 +444,41 @@
                 });
             }
 
-            // 3. Other Clients
+            // 3. Other Clients (Remaining Business Split)
             if (data.drivers?.other_clients) {
-                const c = data.drivers.other_clients;
-                sections.insertAdjacentHTML('beforeend', `<h3 class="px-4 mb-4 mt-8 text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><i data-lucide="layers" class="w-3 h-3"></i> Remaining Business</h3>`);
-                sections.insertAdjacentHTML('beforeend', `
-                    <div class="card-modern bg-slate-50 border-slate-200">
-                        <div class="flex justify-between items-start mb-6">
-                            <div>
-                                <h3 class="text-2xl font-extrabold tracking-tight leading-none mb-1 text-slate-600">${c.client}</h3>
-                                <p class="text-[10px] font-bold opacity-40 uppercase tracking-tight">${formatCompact(c.rev_a)} → ${formatCompact(c.rev_b)}</p>
-                            </div>
-                            <span class="badge-delta bg-white/60 ${c.delta >= 0 ? 'text-green-700' : 'text-rose-700'}">
-                                ${c.delta >= 0 ? '+' : ''}${formatCompact(c.delta)}
-                            </span>
-                        </div>
-                        <div class="space-y-3 pt-5 border-t border-black/5">
-                            ${c.products.map(p => {
-                                const isOther = p.name.toLowerCase().includes('other');
-                                let displayName = p.name.replace(/\bitems\b/i, 'products');
-                                if (isOther) {
-                                    displayName = (c.products.length === 1) 
-                                        ? displayName.replace(/\bOther\b/i, '').trim() 
-                                        : displayName.replace(/\bOther\b/i, 'other');
-                                }
-                                return `
-                                    <div class="flex justify-between items-center text-[11px]">
-                                        <span class="font-bold opacity-70 truncate max-w-[200px]">${displayName}</span>
-                                        <span class="font-extrabold">${formatCompact(p.rev_a)} → ${formatCompact(p.rev_b)}</span>
+                const oc = data.drivers.other_clients;
+                if (oc.gainers || oc.decliners) {
+                    sections.insertAdjacentHTML('beforeend', `<h3 class="px-4 mb-4 mt-8 text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2"><i data-lucide="layers" class="w-3 h-3"></i> Remaining Business</h3>`);
+                    
+                    [oc.gainers, oc.decliners].forEach(c => {
+                        if (!c) return;
+                        sections.insertAdjacentHTML('beforeend', `
+                            <div class="card-modern ${c.delta >= 0 ? 'bg-emerald-50/50 border-emerald-100' : 'bg-rose-50/50 border-rose-100'} mb-4">
+                                <div class="flex justify-between items-start mb-6">
+                                    <div>
+                                        <h3 class="text-2xl font-extrabold tracking-tight leading-none mb-1 ${c.delta >= 0 ? 'text-emerald-700' : 'text-rose-700'}">${c.client}</h3>
+                                        <p class="text-[10px] font-bold opacity-40 uppercase tracking-tight text-slate-500">${formatCompact(c.rev_a)} → ${formatCompact(c.rev_b)}</p>
                                     </div>
-                                `;
-                            }).join('')}
-                        </div>
-                    </div>
-                `);
+                                    <span class="badge-delta bg-white/80 shadow-sm ${c.delta >= 0 ? 'text-emerald-700' : 'text-rose-700'}">
+                                        ${c.delta >= 0 ? '+' : ''}${formatCompact(c.delta)}
+                                    </span>
+                                </div>
+                                <div class="space-y-3 pt-5 border-t border-black/5">
+                                    ${c.products.map(p => {
+                                        const isOther = p.name.toLowerCase().includes('other');
+                                        let displayName = p.name.replace(/\bitems\b/i, 'products');
+                                        return `
+                                            <div class="flex justify-between items-center text-[11px]">
+                                                <span class="font-bold opacity-70 truncate max-w-[200px] text-slate-600">${displayName}</span>
+                                                <span class="font-extrabold text-slate-900">${formatCompact(p.rev_a)} → ${formatCompact(p.rev_b)}</span>
+                                            </div>
+                                        `;
+                                    }).join('')}
+                                </div>
+                            </div>
+                        `);
+                    });
+                }
             }
 
 
