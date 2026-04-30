@@ -238,15 +238,16 @@
             }
         }
 
-        function generateTrendChart(points, width = 400, height = 80) {
+        function generateTrendChart(points, width = 400, height = 100) {
             if (!points || points.length === 0) return '';
             const values = points.map(p => p.value);
-            const maxVal = Math.max(...values) * 1.1;
-            const minVal = Math.min(...values) * 0.9;
+            const maxVal = Math.max(...values) * 1.2;
+            const minVal = Math.min(...values) * 0.8;
             const range = maxVal - minVal || 1;
             
-            const xStep = width / (points.length - 1);
-            const getX = (i) => i * xStep;
+            const paddingX = 25; 
+            const drawWidth = width - (paddingX * 2);
+            const getX = (i) => paddingX + i * (drawWidth / (points.length - 1));
             const getY = (v) => height - ((v - minVal) / range) * height;
 
             const pathData = points.map((p, i) => `${i === 0 ? 'M' : 'L'} ${getX(i)} ${getY(p.value)}`).join(' ');
@@ -257,19 +258,29 @@
                     <svg width="100%" height="${height}" viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" style="overflow: visible;">
                         <defs>
                             <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
-                                <stop offset="0%" stop-color="rgba(37, 99, 235, 0.1)" />
+                                <stop offset="0%" stop-color="rgba(37, 99, 235, 0.12)" />
                                 <stop offset="100%" stop-color="rgba(37, 99, 235, 0)" />
                             </linearGradient>
                         </defs>
                         <path d="${areaData}" fill="url(#chartGrad)" />
                         <path d="${pathData}" fill="none" stroke="#2563eb" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" />
-                        ${points.map((p, i) => `
-                            <circle cx="${getX(i)}" cy="${getY(p.value)}" r="2.5" fill="white" stroke="#2563eb" stroke-width="1.5" />
-                        `).join('')}
+                        ${points.map((p, i) => {
+                            const prev = i > 0 ? points[i-1].value : null;
+                            const pct = prev ? ((p.value - prev) / (prev || 1) * 100).toFixed(0) : null;
+                            const isUp = pct >= 0;
+                            return `
+                                <circle cx="${getX(i)}" cy="${getY(p.value)}" r="2.5" fill="white" stroke="#2563eb" stroke-width="1.5" />
+                                ${pct !== null ? `
+                                    <text x="${getX(i)}" y="${getY(p.value) - 12}" text-anchor="middle" font-size="8" font-weight="900" fill="${isUp ? '#10b981' : '#f43f5e'}">
+                                        ${isUp ? '↑' : '↓'}${Math.abs(pct)}%
+                                    </text>
+                                ` : ''}
+                            `;
+                        }).join('')}
                     </svg>
-                    <div class="flex justify-between mt-4 overflow-x-auto no-scrollbar">
+                    <div class="flex justify-between mt-4">
                         ${points.map(p => `
-                            <div class="text-center min-w-[40px]">
+                            <div class="text-center w-[50px]">
                                 <p class="text-[8px] font-bold text-slate-400 uppercase leading-none mb-1">${p.label}</p>
                                 <p class="text-[10px] font-black text-slate-900">${formatCompact(p.value)}</p>
                             </div>
@@ -341,10 +352,16 @@
             }
 
             if (data.weekly_trends && data.weekly_trends.length > 0) {
-                const weeklyPoints = data.weekly_trends.map(t => ({
-                    label: new Date(t.week_start).toLocaleDateString('en-US', { day: 'numeric', month: 'short' }),
-                    value: t.revenue
-                }));
+                const weeklyPoints = data.weekly_trends.map(t => {
+                    const start = new Date(t.week_start);
+                    const end = new Date(t.week_start);
+                    end.setDate(end.getDate() + 6);
+                    const f = (d) => `${String(d.getDate()).padStart(2, '0')}.${String(d.getMonth() + 1).padStart(2, '0')}`;
+                    return {
+                        label: `${f(start)}-${f(end)}`,
+                        value: t.revenue
+                    };
+                });
 
                 sections.insertAdjacentHTML('beforeend', `
                     <h3 class="px-4 mb-4 mt-2 text-xs font-black uppercase tracking-widest text-slate-400 flex items-center gap-2">
