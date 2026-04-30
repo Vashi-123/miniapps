@@ -238,7 +238,10 @@
             const totalDelta = (data.drivers?.top_gainers?.reduce((acc, c) => acc + c.delta, 0) || 0) +
                 (data.drivers?.top_decliners?.reduce((acc, c) => acc + c.delta, 0) || 0);
 
-            // Dates
+            const yesterdayDate = new Date(updatedAt);
+            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
+            const yesterdayStr = yesterdayDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+
             const dayBeforeDate = new Date(updatedAt);
             dayBeforeDate.setDate(dayBeforeDate.getDate() - 2);
             const dayBeforeStr = dayBeforeDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
@@ -246,21 +249,24 @@
             const kpiContainer = document.getElementById('kpi-container');
             kpiContainer.innerHTML = `
                 <div class="card-modern bg-black text-white">
-                    <p class="text-[11px] font-bold opacity-40 uppercase tracking-[0.2em] mb-2">Revenue Yesterday</p>
-                    <div class="flex justify-between items-end mb-6">
+                    <div class="flex justify-between items-start mb-2">
+                        <p class="text-[11px] font-bold opacity-40 uppercase tracking-[0.2em]">Revenue Yesterday</p>
+                        <p class="text-[11px] font-bold opacity-40 uppercase tracking-[0.2em]">${yesterdayStr}</p>
+                    </div>
+                    <div class="mb-8">
                         <h2 class="text-5xl font-extrabold tracking-tighter">${formatCompact(totalRevB)}</h2>
-                        <div class="flex flex-col items-end">
-                            <span class="text-lg font-black ${totalDelta >= 0 ? 'text-[#DDFF55]' : 'text-rose-400'}">
-                                ${totalDelta >= 0 ? '+' : ''}${formatCompact(totalDelta)}
-                            </span>
-                        </div>
                     </div>
                     <div class="pt-6 border-t border-white/10 flex justify-between items-center">
                         <div class="flex items-center gap-2">
                             <i data-lucide="calendar" class="w-3 h-3 text-white/30"></i>
                             <span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">${dayBeforeStr}</span>
                         </div>
-                        <span class="text-sm font-bold text-white/60">${formatCompact(totalRevA)}</span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-sm font-bold text-white/60">${formatCompact(totalRevA)}</span>
+                            <span class="text-xs font-black ${totalDelta >= 0 ? 'text-[#DDFF55]' : 'text-rose-400'}">
+                                ${totalDelta >= 0 ? '+' : ''}${formatCompact(totalDelta)}
+                            </span>
+                        </div>
                     </div>
                 </div>
             `;
@@ -284,7 +290,13 @@
                             </div>
                             <div class="space-y-3 pt-5 border-t border-black/5">
                                 ${c.products.map(p => {
-                                    const displayName = p.name.replace(/\bOther\b/i, '').replace(/\bitems\b/i, 'products').trim();
+                                    const isOther = p.name.toLowerCase().includes('other');
+                                    let displayName = p.name.replace(/\bitems\b/i, 'products');
+                                    if (isOther) {
+                                        displayName = (c.products.length === 1) 
+                                            ? displayName.replace(/\bOther\b/i, '').trim() 
+                                            : displayName.replace(/\bOther\b/i, 'other');
+                                    }
                                     return `
                                         <div class="flex justify-between items-center text-[11px]">
                                             <span class="font-bold opacity-70 truncate max-w-[200px]">${displayName}</span>
@@ -313,11 +325,17 @@
                             </div>
                             <div class="space-y-3 pt-5 border-t border-black/5">
                                 ${c.products.map(p => {
-                                    const displayName = p.name.replace(/\bOther\b/i, '').replace(/\bitems\b/i, 'products').trim();
+                                    const isOther = p.name.toLowerCase().includes('other');
+                                    let displayName = p.name.replace(/\bitems\b/i, 'products');
+                                    if (isOther) {
+                                        displayName = (c.products.length === 1) 
+                                            ? displayName.replace(/\bOther\b/i, '').trim() 
+                                            : displayName.replace(/\bOther\b/i, 'other');
+                                    }
                                     return `
                                         <div class="flex justify-between items-center text-[11px]">
-                                            <span class="font-bold opacity-50 truncate max-w-[200px]">${displayName}</span>
-                                            <span class="font-extrabold opacity-70">${formatCompact(p.rev_a)} → ${formatCompact(p.rev_b)}</span>
+                                            <span class="font-bold opacity-70 truncate max-w-[200px]">${displayName}</span>
+                                            <span class="font-extrabold">${formatCompact(p.rev_a)} → ${formatCompact(p.rev_b)}</span>
                                         </div>
                                     `;
                                 }).join('')}
