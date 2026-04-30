@@ -409,7 +409,7 @@
                         <div class="card-modern card-gain mb-4">
                             <div class="flex justify-between items-start mb-6">
                                 <div>
-                                    <h3 class="text-2xl font-extrabold tracking-tight leading-none mb-1">${c.client.replace(/Other/i, '').replace(/Drivers/i, 'clients').trim()}</h3>
+                                    <h3 class="text-2xl font-extrabold tracking-tight leading-none mb-1">${c.client.replace(/Drivers/i, 'clients')}</h3>
                                     <p class="text-[10px] font-bold opacity-40 uppercase tracking-tight text-slate-500">${formatCompact(c.rev_a)} → ${formatCompact(c.rev_b)}</p>
                                 </div>
                                 <span class="badge-delta bg-white/60 text-green-700">+${formatCompact(c.delta)}</span>
@@ -465,7 +465,7 @@
                         <div class="card-modern card-decline mb-4">
                             <div class="flex justify-between items-start mb-6">
                                 <div>
-                                    <h3 class="text-2xl font-extrabold tracking-tight leading-none mb-1 text-slate-700">${c.client.replace(/Other/i, '').replace(/Drivers/i, 'clients').trim()}</h3>
+                                    <h3 class="text-2xl font-extrabold tracking-tight leading-none mb-1 text-slate-700">${c.client.replace(/Drivers/i, 'clients')}</h3>
                                     <p class="text-[10px] font-bold opacity-40 uppercase tracking-tight text-slate-500">${formatCompact(c.rev_a)} → ${formatCompact(c.rev_b)}</p>
                                 </div>
                                 <span class="badge-delta bg-white/60 text-rose-700">${formatCompact(c.delta)}</span>
