@@ -238,6 +238,43 @@
             }
         }
 
+        function renderTop5(rankings, activeDim = 'products') {
+            const dimLabels = {
+                'products': 'Products',
+                'categories': 'Categories',
+                'clients': 'Clients'
+            };
+            
+            const items = (rankings && rankings[activeDim]) || [];
+            
+            return `
+                <div class="card-modern bg-white shadow-sm border-slate-100 mb-8">
+                    <div class="flex justify-between items-center mb-6">
+                        <h3 class="text-xl font-black tracking-tight text-slate-900 leading-none">Top 5</h3>
+                        <div class="bg-slate-100 p-1 rounded-xl flex gap-1">
+                            ${['products', 'categories', 'clients'].map(dim => `
+                                <button onclick="window.switchTop5Dimension('${dim}')" 
+                                    class="px-2.5 py-1.5 rounded-lg text-[9px] font-black uppercase tracking-tight transition-all ${activeDim === dim ? 'bg-white text-slate-900 shadow-sm' : 'text-slate-400'}">
+                                    ${dimLabels[dim]}
+                                </button>
+                            `).join('')}
+                        </div>
+                    </div>
+                    <div class="space-y-4">
+                        ${items.length > 0 ? items.map((item, idx) => `
+                            <div class="flex justify-between items-center">
+                                <div class="flex items-center gap-3">
+                                    <span class="w-5 h-5 flex items-center justify-center bg-slate-50 rounded-md text-[10px] font-black text-slate-400">${idx + 1}</span>
+                                    <span class="text-sm font-bold text-slate-700 truncate max-w-[170px]">${item.name}</span>
+                                </div>
+                                <span class="text-sm font-black text-slate-900">${formatCompact(item.rev)}</span>
+                            </div>
+                        `).join('') : '<p class="text-center py-4 text-xs font-bold text-slate-400 italic uppercase">No data available</p>'}
+                    </div>
+                </div>
+            `;
+        }
+
         function generateTrendChart(points, width = 400, height = 100) {
             if (!points || points.length === 0) return '';
             const values = points.map(p => p.value);
@@ -329,7 +366,17 @@
                         </div>
                     </div>
                 </div>
+                <div id="top-5-container">
+                    ${renderTop5(data.top_5_rankings, 'products')}
+                </div>
             `;
+
+            window.switchTop5Dimension = (dim) => {
+                const container = document.getElementById('top-5-container');
+                if (container) {
+                    container.innerHTML = renderTop5(data.top_5_rankings, dim);
+                }
+            };
 
             // Sections
             const sections = document.getElementById('report-sections');
