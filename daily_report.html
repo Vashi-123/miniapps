@@ -149,8 +149,14 @@
         function formatCompact(val) {
             const abs = Math.abs(val);
             const sign = val < 0 ? '-' : '';
-            if (abs >= 1000000) return `${sign}$${(abs / 1000000).toFixed(0)}M`;
-            if (abs >= 1000) return `${sign}$${(abs / 1000).toFixed(0)}K`;
+            if (abs >= 1000000) {
+                const m = abs / 1000000;
+                return `${sign}$${m >= 100 ? m.toFixed(0) : m.toFixed(2)}M`;
+            }
+            if (abs >= 1000) {
+                const k = abs / 1000;
+                return `${sign}$${k >= 100 ? k.toFixed(0) : k.toFixed(1)}K`;
+            }
             return `${sign}$${abs.toFixed(0)}`;
         }
 
