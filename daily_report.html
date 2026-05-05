@@ -216,9 +216,15 @@
 
                 document.getElementById('view-report').classList.remove('hidden');
 
-                // Fetch pre-calculated report from Supabase
-                // If selectedDate is provided, fetch specific ID daily_analytics_YYYY-MM-DD
-                const reportId = selectedDate ? `daily_analytics_${selectedDate}` : 'daily_analytics';
+                // If selectedDate is provided, it's the "Issue Date" (the day user sees in calendar).
+                // Our data IDs are based on the data date (period_b), which is IssueDate - 1.
+                let reportId = 'daily_analytics';
+                if (selectedDate) {
+                    const d = new Date(selectedDate);
+                    d.setDate(d.getDate() - 1);
+                    const dataDateStr = d.toISOString().split('T')[0];
+                    reportId = `daily_analytics_${dataDateStr}`;
+                }
 
                 const { data: reportRow, error: reportError } = await _supabase
                     .from('analytical_reports')
@@ -248,7 +254,7 @@
                     issueDate.setDate(issueDate.getDate() + 1); // Report issued on the next day
                     
                     document.getElementById('date-label').innerText = `Report for: ${issueDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}`;
-                    document.getElementById('date-picker').value = reportData.period_info.period_b.start;
+                    document.getElementById('date-picker').value = issueDate.toISOString().split('T')[0];
                 } else {
                     document.getElementById('date-label').innerText = `Report Updated: ${updatedAt.toLocaleDateString()}`;
                 }
