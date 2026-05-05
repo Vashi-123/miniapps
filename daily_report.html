@@ -241,10 +241,13 @@
 
                 const updatedAt = new Date(reportRow.updated_at);
                 
-                // Set the date label based on the report's period_info
+                // Set the date label based on the report's issue date (day after period_b)
                 if (reportData.period_info && reportData.period_info.period_b) {
-                    const reportDate = new Date(reportData.period_info.period_b.start);
-                    document.getElementById('date-label').innerText = `Report for: ${reportDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+                    const dataDate = new Date(reportData.period_info.period_b.start);
+                    const issueDate = new Date(dataDate);
+                    issueDate.setDate(issueDate.getDate() + 1); // Report issued on the next day
+                    
+                    document.getElementById('date-label').innerText = `Report for: ${issueDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}`;
                     document.getElementById('date-picker').value = reportData.period_info.period_b.start;
                 } else {
                     document.getElementById('date-label').innerText = `Report Updated: ${updatedAt.toLocaleDateString()}`;
