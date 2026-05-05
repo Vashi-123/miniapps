@@ -240,8 +240,15 @@
                 }
 
                 const updatedAt = new Date(reportRow.updated_at);
-
-                document.getElementById('date-label').innerText = `Report Updated: ${updatedAt.toLocaleDateString()}`;
+                
+                // Set the date label based on the report's period_info
+                if (reportData.period_info && reportData.period_info.period_b) {
+                    const reportDate = new Date(reportData.period_info.period_b.start);
+                    document.getElementById('date-label').innerText = `Report for: ${reportDate.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' })}`;
+                    document.getElementById('date-picker').value = reportData.period_info.period_b.start;
+                } else {
+                    document.getElementById('date-label').innerText = `Report Updated: ${updatedAt.toLocaleDateString()}`;
+                }
 
                 renderUI(reportData, updatedAt);
                 document.getElementById('lock-screen').style.display = 'none';
@@ -354,35 +361,31 @@
         }
 
         function renderUI(data, updatedAt) {
-            // Dates
-            const yesterdayDate = new Date(updatedAt);
-            yesterdayDate.setDate(yesterdayDate.getDate() - 1);
-            const yesterdayStr = yesterdayDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+            // Dates from period_info
+            const dateB = data.period_info ? new Date(data.period_info.period_b.start) : new Date(updatedAt);
+            const dateA = data.period_info ? new Date(data.period_info.period_a.start) : new Date(dateB);
+            if (!data.period_info) dateA.setDate(dateB.getDate() - 1);
 
-            const dayBeforeDate = new Date(updatedAt);
-            dayBeforeDate.setDate(dayBeforeDate.getDate() - 2);
-            const dayBeforeStr = dayBeforeDate.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+            const strB = dateB.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
+            const strA = dateA.toLocaleDateString('en-US', { day: 'numeric', month: 'short' });
 
-            // KPI
-            const yesterdayTrend = data.daily_trends?.find(t => new Date(t.date).toDateString() === yesterdayDate.toDateString());
-            const dayBeforeTrend = data.daily_trends?.find(t => new Date(t.date).toDateString() === dayBeforeDate.toDateString());
-
-            const totalRevB = yesterdayTrend ? yesterdayTrend.revenue : ((data.drivers?.top_gainers?.reduce((acc, c) => acc + c.rev_b, 0) || 0) + (data.drivers?.top_decliners?.reduce((acc, c) => acc + c.rev_b, 0) || 0));
-            const totalRevA = dayBeforeTrend ? dayBeforeTrend.revenue : ((data.drivers?.top_gainers?.reduce((acc, c) => acc + c.rev_a, 0) || 0) + (data.drivers?.top_decliners?.reduce((acc, c) => acc + c.rev_a, 0) || 0));
+            // KPI from global_metrics
+            const totalRevB = data.global_metrics ? data.global_metrics.rev_b : 0;
+            const totalRevA = data.global_metrics ? data.global_metrics.rev_a : 0;
             const totalDelta = totalRevB - totalRevA;
 
             const kpiContainer = document.getElementById('kpi-container');
             kpiContainer.innerHTML = `
                 <div class="card-modern bg-black text-white">
                     <div class="mb-2">
-                        <p class="text-[11px] font-bold opacity-40 uppercase tracking-[0.2em]">Revenue // ${yesterdayStr}</p>
+                        <p class="text-[11px] font-bold opacity-40 uppercase tracking-[0.2em]">Revenue // ${strB}</p>
                     </div>
                     <div class="mb-8">
                         <h2 class="text-5xl font-extrabold tracking-tighter">${formatCompact(totalRevB)}</h2>
                     </div>
                     <div class="pt-6 border-t border-white/10 flex justify-between items-center">
                         <div class="flex items-center gap-2">
-                            <span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">${dayBeforeStr}</span>
+                            <span class="text-[10px] font-bold text-white/40 uppercase tracking-widest">${strA}</span>
                         </div>
                         <div class="flex items-center gap-3">
                             <span class="text-sm font-bold text-white/60">${formatCompact(totalRevA)}</span>
